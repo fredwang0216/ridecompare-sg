@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>RideCompare SG</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;background:#f5f7fb;color:#111827}
+.wrap{max-width:560px;margin:auto;padding:22px 16px 40px}
+.brand{font-size:25px;font-weight:800;margin:8px 0 4px}
+.sub{color:#6b7280;font-size:14px;margin-bottom:20px}
+.card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(17,24,39,.07);margin-bottom:14px}
+label{display:block;font-size:12px;color:#6b7280;margin:2px 0 6px}
+input{width:100%;padding:14px 13px;border:1px solid #e5e7eb;border-radius:12px;font-size:16px;outline:none;margin-bottom:11px}
+input:focus{border-color:#111827}
+button{border:0;border-radius:13px;padding:13px 15px;font-size:15px;font-weight:700;cursor:pointer}
+.primary{width:100%;background:#111827;color:white;font-size:16px}
+.primary:disabled{opacity:.55}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.provider{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;background:#f0f2f5;display:grid;place-items:center;font-weight:800}
+.name{font-weight:750}.type{font-size:12px;color:#6b7280;margin-top:3px}
+.price{font-size:21px;font-weight:800;text-align:right}
+.eta{font-size:12px;color:#6b7280;text-align:right;margin-top:2px}
+.open{background:#eef1f5;color:#111827;padding:9px 12px;font-size:13px}
+.status{color:#6b7280;font-size:13px;text-align:center;padding:8px 0}
+.note{font-size:12px;color:#8a8f98;line-height:1.5}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">RideCompare SG</div>
+  <div class="sub">一次输入，比较 Grab、Gojek、TADA</div>
+
+  <div class="card">
+    <label>起点</label>
+    <input id="from" placeholder="例如 Icon" autocomplete="street-address">
+    <label>终点</label>
+    <input id="to" placeholder="例如 VivoCity" autocomplete="street-address">
+    <button id="compare" class="primary">开始比价</button>
+  </div>
+
+  <div id="results" class="card hidden">
+    <div id="status" class="status">正在查询实时价格…</div>
+    <div id="list"></div>
+  </div>
+
+  <div class="note">
+    当前版本先完成统一输入、结果展示和一键跳转。真正的实时报价 API 应放在服务器端，不能把 API Key 直接放在这个 HTML 里。
+  </div>
+</div>
+
+<script>
+const providers = [
+  {id:"grab",name:"Grab",type:"GrabCar",url:"https://www.grab.com/sg/"},
+  {id:"gojek",name:"Gojek",type:"GoCar",url:"https://www.gojek.com/sg"},
+  {id:"tada",name:"TADA",type:"Car",url:"https://tada.global/"}
+];
+
+const $ = id => document.getElementById(id);
+const results = $("results"), list = $("list"), status = $("status"), compare = $("compare");
+
+function renderLoading(){
+  list.innerHTML = providers.map(p => `
+    <div class="row" style="padding:13px 0;border-top:1px solid #f0f1f3">
+      <div class="provider">
+        <div class="logo">${p.name[0]}</div>
+        <div><div class="name">${p.name}</div><div class="type">${p.type}</div></div>
+      </div>
+      <div class="price">…</div>
+    </div>`).join("");
+}
+
+function renderResults(data){
+  const rows = providers.map(p => {
+    const r = data?.[p.id] || {};
+    return `
+      <div style="padding:13px 0;border-top:1px solid #f0f1f3">
+        <div class="row">
+          <div class="provider">
+            <div class="logo">${p.name[0]}</div>
+            <div><div class="name">${p.name}</div><div class="type">${r.vehicle || p.type}</div></div>
+          </div>
+          <div>
+            <div class="price">${r.fare ? "S$"+r.fare : "—"}</div>
+            <div class="eta">${r.eta ? r.eta+" min" : ""}</div>
+          </div>
+        </div>
+        <div style="text-align:right;margin-top:9px">
+          <button class="open" onclick="openProvider('${p.id}')">打开 ${p.name}</button>
+        </div>
+      </div>`;
+  }).join("");
+  list.innerHTML = rows;
+}
+
+window.openProvider = function(id){
+  const p = providers.find(x => x.id === id);
+  if (!p) return;
+  const from = $("from").value.trim(), to = $("to").value.trim();
+  localStorage.setItem("ridecompare_trip", JSON.stringify({from,to}));
+  // Deep-link parameters will be added here once an officially supported
+  // provider-specific link/API is verified.
+  window.location.href = p.url;
+};
+
+compare.onclick = async () => {
+  const from = $("from").value.trim(), to = $("to").value.trim();
+  if (!from || !to) { alert("请填写起点和终点"); return; }
+
+  localStorage.setItem("ridecompare_trip", JSON.stringify({from,to}));
+  results.classList.remove("hidden");
+  compare.disabled = true;
+  renderLoading();
+  status.textContent = "正在查询实时价格…";
+
+  // Production endpoint placeholder.
+  // IMPORTANT: call your own backend, not a third-party API directly from the browser.
+  // Expected response:
+  // {grab:{fare:"18.20",eta:3,vehicle:"GrabCar"},gojek:{...},tada:{...}}
+  const endpoint = window.RIDECOMPARE_API || "";
+
+  if (!endpoint) {
+    setTimeout(() => {
+      status.textContent = "比价接口尚未接入";
+      renderResults({});
+      compare.disabled = false;
+    }, 500);
+    return;
+  }
+
+  try {
+    const url = endpoint + "?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("API "+res.status);
+    const data = await res.json();
+    status.textContent = "实时结果";
+    renderResults(data);
+  } catch(e) {
+    status.textContent = "暂时无法取得实时报价";
+    renderResults({});
+  } finally {
+    compare.disabled = false;
+  }
+};
+
+const saved = localStorage.getItem("ridecompare_trip");
+if (saved) {
+  try {
+    const t = JSON.parse(saved);
+    if (t.from) $("from").value = t.from;
+    if (t.to) $("to").value = t.to;
+  } catch(e){}
+}
+</script>
+</body>
+</html>
