@@ -1,76 +1,12 @@
-// Vercel serverless function for RideCompare SG.
-// Provider credentials stay server-side in Vercel environment variables.
-// The adapter supports both GET query APIs and POST JSON APIs, and either
-// Authorization: Bearer <key> or a custom header such as X-API-Key.
-
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { from, to } = req.query || {};
-  if (!from || !to) {
-    return res.status(400).json({ error: 'from and to are required' });
-  }
-
-  const upstream = process.env.RIDECOMPARE_PROVIDER_API_URL;
-  const apiKey = process.env.RIDECOMPARE_PROVIDER_API_KEY;
-
-  if (!upstream || !apiKey) {
-    return res.status(503).json({
-      error: 'fare_provider_not_configured',
-      message: 'Live fare provider credentials are not configured on the server yet.'
-    });
-  }
-
-  const method = (process.env.RIDECOMPARE_PROVIDER_METHOD || 'GET').toUpperCase();
-  const authHeader = process.env.RIDECOMPARE_PROVIDER_AUTH_HEADER || 'Authorization';
-  const authScheme = process.env.RIDECOMPARE_PROVIDER_AUTH_SCHEME ?? 'Bearer';
-  const authValue = authScheme ? `${authScheme} ${apiKey}` : apiKey;
-
-  try {
-    const url = new URL(upstream);
-    const headers = {
-      [authHeader]: authValue,
-      Accept: 'application/json'
-    };
-
-    const payload = {
-      from,
-      to,
-      origin: from,
-      destination: to
-    };
-
-    const request = { method, headers };
-
-    if (method === 'GET') {
-      url.searchParams.set('from', from);
-      url.searchParams.set('to', to);
-    } else {
-      headers['Content-Type'] = 'application/json';
-      request.body = JSON.stringify(payload);
-    }
-
-    const response = await fetch(url, request);
-    const text = await response.text();
-
-    if (!response.ok) {
-      return res.status(502).json({
-        error: 'fare_provider_error',
-        provider_status: response.status
-      });
-    }
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res.status(502).json({ error: 'invalid_provider_json' });
-    }
-
-    return res.status(200).json(data);
-  } catch {
-    return res.status(502).json({ error: 'fare_provider_unreachable' });
-  }
-}
+// RideCompare SG fallback quote engine.
+// No scraping or reverse-engineering: public geocoding + routing are used
+// to produce clearly-labeled estimates until official partner quote APIs exist.
+const PROVIDERS=[
+ {id:'grab',name:'Grab',type:'GrabCar',base:3.5,perKm:.85,booking:1,minimum:7},
+ {id:'gojek',name:'Gojek',type:'GoCar',base:3.5,perKm:.6,booking:1.45,minimum:7},
+ {id:'tada',name:'TADA',type:'Car',base:3,perKm:.5,booking:.5,minimum:6}
+];
+function timeFactor(h){if((h>=7&&h<10)||(h>=17&&h<20))return 1.28;if(h>=22||h<6)return 1.08;return 1}
+async function geocode(q){const u=new URL('https://nominatim.openstreetmap.org/search');u.searchParams.set('q',`${q}, Singapore`);u.searchParams.set('format','jsonv2');u.searchParams.set('limit','1');const r=await fetch(u,{headers:{'User-Agent':'RideCompare-SG/1.0'}});if(!r.ok)throw Error('geocode failed');const x=await r.json();if(!x.length)throw Error(`Cannot find location: ${q}`);return{lat:+x[0].lat,lon:+x[0].lon,label:x[0].display_name}}
+async function route(a,b){const u=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false&steps=false`;const r=await fetch(u);if(!r.ok)throw Error('routing failed');const x=await r.json();if(x.code!=='Ok'||!x.routes?.[0])throw Error('route unavailable');return x.routes[0]}
+export default async function handler(req,res){if(req.method!=='GET')return res.status(405).json({error:'Method not allowed'});const{from,to}=req.query||{};if(!from||!to)return res.status(400).json({error:'from and to are required'});try{const[a,b]=await Promise.all([geocode(from),geocode(to)]);const r=await route(a,b);const km=r.distance/1000,minutes=Math.max(1,Math.round(r.duration/60));const hour=Number(new Intl.DateTimeFormat('en-SG',{timeZone:'Asia/Singapore',hour:'2-digit',hour12:false}).format(new Date()));const factor=timeFactor(hour);const quotes={};for(const p of PROVIDERS){const fare=Math.max(p.minimum,(p.base+p.perKm*km+p.booking)*factor);const spread=p.id==='grab'?.12:p.id==='gojek'?.10:.09;quotes[p.id]={fare:+fare.toFixed(2),fareLow:+(fare*(1-spread)).toFixed(2),fareHigh:+(fare*(1+spread)).toFixed(2),vehicle:p.type,estimated:true,estimateBasis:'route distance + rate model; not a live platform quote'}}return res.status(200).json({mode:'estimate',origin:{query:from,...a},destination:{query:to,...b},route:{distanceKm:+km.toFixed(2),durationMin:minutes},quotes,generatedAt:new Date().toISOString()})}catch(e){return res.status(502).json({error:'estimate_unavailable',message:e.message})}}
