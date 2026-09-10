@@ -4,48 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<title>RideCompare SG</title>
+<title>RideCompare SG — Grab / Gojek / TADA 比价</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;background:#f5f7fb;color:#111827}
-.wrap{max-width:560px;margin:auto;padding:22px 16px 40px}
-.brand{font-size:25px;font-weight:800;margin:8px 0 4px}
-.sub{color:#6b7280;font-size:14px;margin-bottom:20px}
-.card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(17,24,39,.07);margin-bottom:14px}
-label{display:block;font-size:12px;color:#6b7280;margin:2px 0 6px}
-input{width:100%;padding:14px 13px;border:1px solid #e5e7eb;border-radius:12px;font-size:16px;outline:none;margin-bottom:11px}
-input:focus{border-color:#111827}
-button{border:0;border-radius:13px;padding:13px 15px;font-size:15px;font-weight:700;cursor:pointer}
-.primary{width:100%;background:#111827;color:white;font-size:16px}
-.primary:disabled{opacity:.55}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.provider{display:flex;align-items:center;gap:12px}
-.logo{width:42px;height:42px;border-radius:12px;background:#f0f2f5;display:grid;place-items:center;font-weight:800}
-.name{font-weight:750}.type{font-size:12px;color:#6b7280;margin-top:3px}
-.price{font-size:21px;font-weight:800;text-align:right}
-.eta{font-size:12px;color:#6b7280;text-align:right;margin-top:2px}
-.open{background:#eef1f5;color:#111827;padding:9px 12px;font-size:13px}
-.status{color:#6b7280;font-size:13px;text-align:center;padding:8px 0}
-.note{font-size:12px;color:#8a8f98;line-height:1.5}
-.hidden{display:none}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;background:#f5f7fb;color:#111827}.wrap{max-width:600px;margin:auto;padding:22px 16px 44px}.brand{font-size:27px;font-weight:850;letter-spacing:-.5px;margin:10px 0 4px}.sub{color:#6b7280;font-size:14px;margin-bottom:18px}.card{background:#fff;border-radius:20px;padding:17px;box-shadow:0 5px 22px rgba(17,24,39,.07);margin-bottom:14px}label{display:block;font-size:12px;color:#6b7280;margin:2px 0 6px}input{width:100%;padding:15px 14px;border:1px solid #e5e7eb;border-radius:13px;font-size:16px;outline:none;margin-bottom:11px;background:#fff}input:focus{border-color:#111827;box-shadow:0 0 0 3px rgba(17,24,39,.06)}button{border:0;border-radius:13px;padding:13px 15px;font-size:15px;font-weight:750;cursor:pointer;-webkit-tap-highlight-color:transparent}.primary{width:100%;background:#111827;color:#fff;font-size:16px;min-height:50px}.primary:disabled{opacity:.55}.status{color:#6b7280;font-size:13px;text-align:center;padding:3px 0 12px}.status.success{color:#15803d}.status.error{color:#b91c1c}.provider-card{padding:14px 0;border-top:1px solid #eef0f2}.provider-card:first-child{border-top:0}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.provider{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:44px;height:44px;border-radius:13px;background:#f0f2f5;display:grid;place-items:center;font-weight:850;flex:none}.name{font-weight:800;font-size:16px}.type{font-size:12px;color:#6b7280;margin-top:3px}.price{font-size:22px;font-weight:850;text-align:right;white-space:nowrap}.price.best{font-size:24px}.eta{font-size:12px;color:#6b7280;text-align:right;margin-top:2px}.badge{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:999px;background:#ecfdf3;color:#15803d;font-size:11px;font-weight:750}.open-wrap{text-align:right;margin-top:10px}.open{background:#eef1f5;color:#111827;padding:9px 12px;font-size:13px}.best-wrap{display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px;padding:10px 12px;border-radius:12px;background:#f7f8fa}.best-label{font-size:12px;color:#6b7280}.best-name{font-size:14px;font-weight:800}.muted{color:#9ca3af}.note{font-size:12px;color:#8a8f98;line-height:1.55;padding:0 2px}.small{font-size:11px}.hidden{display:none}.route{font-size:12px;color:#6b7280;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.retry{background:#111827;color:#fff;padding:10px 13px;font-size:13px;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="brand">RideCompare SG</div>
   <div class="sub">一次输入，比较 Grab、Gojek、TADA</div>
+
   <div class="card">
-    <label>起点</label>
+    <label for="from">起点</label>
     <input id="from" placeholder="例如 Icon" autocomplete="street-address">
-    <label>终点</label>
+    <label for="to">终点</label>
     <input id="to" placeholder="例如 VivoCity" autocomplete="street-address">
     <button id="compare" class="primary">开始比价</button>
   </div>
+
   <div id="results" class="card hidden">
     <div id="status" class="status">正在查询实时价格…</div>
+    <div id="best" class="best-wrap hidden"><div><div class="best-label">当前最低价</div><div id="bestName" class="best-name"></div></div><div id="bestFare" class="price best"></div></div>
     <div id="list"></div>
   </div>
-  <div class="note">当前版本先完成统一输入、结果展示和一键跳转。真正的实时报价 API 应放在服务器端，不能把 API Key 直接放在这个 HTML 里。</div>
+
+  <div class="note">价格是叫车当下的估价，会随供需变化。此网页不会保存账号、支付信息或平台登录凭证。实时报价必须由服务器端合作伙伴/API提供，浏览器端不放 API Key。</div>
 </div>
 <script>
 const providers=[
@@ -53,11 +36,15 @@ const providers=[
  {id:"gojek",name:"Gojek",type:"GoCar",url:"https://www.gojek.com/sg"},
  {id:"tada",name:"TADA",type:"Car",url:"https://tada.global/"}
 ];
-const $=id=>document.getElementById(id),results=$("results"),list=$("list"),status=$("status"),compare=$("compare");
-function renderLoading(){list.innerHTML=providers.map(p=>`<div class="row" style="padding:13px 0;border-top:1px solid #f0f1f3"><div class="provider"><div class="logo">${p.name[0]}</div><div><div class="name">${p.name}</div><div class="type">${p.type}</div></div></div><div class="price">…</div></div>`).join("")}
-function renderResults(data){list.innerHTML=providers.map(p=>{const r=data?.[p.id]||{};return `<div style="padding:13px 0;border-top:1px solid #f0f1f3"><div class="row"><div class="provider"><div class="logo">${p.name[0]}</div><div><div class="name">${p.name}</div><div class="type">${r.vehicle||p.type}</div></div></div><div><div class="price">${r.fare?"S$"+r.fare:"—"}</div><div class="eta">${r.eta?r.eta+" min":""}</div></div></div><div style="text-align:right;margin-top:9px"><button class="open" onclick="openProvider('${p.id}')">打开 ${p.name}</button></div></div>`}).join("")}
-window.openProvider=id=>{const p=providers.find(x=>x.id===id);if(!p)return;const from=$("from").value.trim(),to=$("to").value.trim();localStorage.setItem("ridecompare_trip",JSON.stringify({from,to}));window.location.href=p.url};
-compare.onclick=async()=>{const from=$("from").value.trim(),to=$("to").value.trim();if(!from||!to){alert("请填写起点和终点");return}localStorage.setItem("ridecompare_trip",JSON.stringify({from,to}));results.classList.remove("hidden");compare.disabled=true;renderLoading();status.textContent="正在查询实时价格…";const endpoint=window.RIDECOMPARE_API||"";if(!endpoint){setTimeout(()=>{status.textContent="比价接口尚未接入";renderResults({});compare.disabled=false},500);return}try{const res=await fetch(endpoint+"?from="+encodeURIComponent(from)+"&to="+encodeURIComponent(to));if(!res.ok)throw new Error("API "+res.status);const data=await res.json();status.textContent="实时结果";renderResults(data)}catch(e){status.textContent="暂时无法取得实时报价";renderResults({})}finally{compare.disabled=false}};
+const $=id=>document.getElementById(id);
+const results=$("results"),list=$("list"),status=$("status"),compare=$("compare"),best=$("best");
+const endpoint=window.RIDECOMPARE_API||"/api/quotes";
+function renderLoading(){list.innerHTML=providers.map(p=>`<div class="provider-card"><div class="row"><div class="provider"><div class="logo">${p.name[0]}</div><div><div class="name">${p.name}</div><div class="type">${p.type}</div></div></div><div class="price muted">…</div></div></div>`).join("");best.classList.add("hidden")}
+function normalize(data){const out={};if(!data||typeof data!=="object")return out;const src=data.results||data.quotes||data;for(const p of providers){const r=src[p.id]||src[p.name.toLowerCase()]||{};const fare=Number(r.fare??r.price??r.estimated_fare);if(Number.isFinite(fare)&&fare>0){out[p.id]={fare:fare.toFixed(2),eta:r.eta??r.pickup_eta??r.eta_min??null,vehicle:r.vehicle||r.ride_type||p.type,surge:r.surge??r.surge_active??false,deepLink:r.deepLink||r.deep_link||null}}}return out}
+function renderResults(data){const normalized=normalize(data);const entries=providers.map(p=>({p,r:normalized[p.id]})).filter(x=>x.r);entries.sort((a,b)=>Number(a.r.fare)-Number(b.r.fare));if(entries.length){best.classList.remove("hidden");$("bestName").textContent=entries[0].p.name;$("bestFare").textContent="S$"+entries[0].r.fare} else best.classList.add("hidden");list.innerHTML=providers.map(p=>{const r=normalized[p.id]||{};const href=r.deepLink||p.url;return `<div class="provider-card"><div class="row"><div class="provider"><div class="logo">${p.name[0]}</div><div><div class="name">${p.name}</div><div class="type">${r.vehicle||p.type}</div>${r.surge?'<div class="badge">高峰/动态定价</div>':''}</div></div><div><div class="price ${r.fare?'':'muted'}">${r.fare?'S$'+r.fare:'—'}</div><div class="eta">${r.eta?String(r.eta).replace(/\s*min$/i,'')+' min':''}</div></div></div><div class="open-wrap"><button class="open" onclick='openProvider(${JSON.stringify(p.id)},${JSON.stringify(href)})'>打开 ${p.name}</button></div></div>`}).join("")}
+window.openProvider=(id,href)=>{const from=$("from").value.trim(),to=$("to").value.trim();localStorage.setItem("ridecompare_trip",JSON.stringify({from,to}));window.location.href=href};
+function showError(msg){status.className="status error";status.textContent=msg;list.innerHTML='<div style="text-align:center;padding:7px 0 2px"><button class="retry" onclick="compare.click()">再试一次</button></div>';best.classList.add("hidden")}
+compare.onclick=async()=>{const from=$("from").value.trim(),to=$("to").value.trim();if(!from||!to){alert("请填写起点和终点");return}localStorage.setItem("ridecompare_trip",JSON.stringify({from,to}));results.classList.remove("hidden");compare.disabled=true;status.className="status";status.textContent="正在查询实时价格…";renderLoading();try{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);const res=await fetch(endpoint+"?from="+encodeURIComponent(from)+"&to="+encodeURIComponent(to),{headers:{Accept:"application/json"},signal:controller.signal});clearTimeout(timer);if(!res.ok)throw new Error("HTTP "+res.status);const data=await res.json();const normalized=normalize(data);if(Object.keys(normalized).length===0)throw new Error("NO_QUOTES");status.className="status success";status.textContent="实时结果 · 刚刚查询";renderResults(data)}catch(e){if(e.message==="NO_QUOTES")showError("暂时没有可用报价");else if(e.name==="AbortError")showError("查询超时，请再试一次");else showError("实时报价服务暂时不可用")}finally{compare.disabled=false}};
 const saved=localStorage.getItem("ridecompare_trip");if(saved){try{const t=JSON.parse(saved);if(t.from)$("from").value=t.from;if(t.to)$("to").value=t.to}catch(e){}}
 </script>
 </body>
