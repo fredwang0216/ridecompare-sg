@@ -1,0 +1,7 @@
+{
+  "name": "ridecompare-sg",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Singapore ride-hailing price comparison app",
+  "engines": { "node": ">=18" }
+}
