@@ -1,11 +1,7 @@
 // Vercel serverless function for RideCompare SG.
-//
-// IMPORTANT:
-// - This file is intentionally provider-agnostic. Do NOT put provider API keys in index.html.
-// - Set RIDECOMPARE_PROVIDER_API_URL and RIDECOMPARE_PROVIDER_API_KEY as server-side env vars
-//   once an authorized fare provider/partner feed is selected.
-// - Expected normalized response from the upstream provider:
-//   { grab:{fare:14.2,eta:4,vehicle:"GrabCar"}, gojek:{...}, tada:{...} }
+// Provider credentials stay server-side in Vercel environment variables.
+// The adapter supports both GET query APIs and POST JSON APIs, and either
+// Authorization: Bearer <key> or a custom header such as X-API-Key.
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -23,23 +19,42 @@ export default async function handler(req, res) {
   if (!upstream || !apiKey) {
     return res.status(503).json({
       error: 'fare_provider_not_configured',
-      message: 'No authorized live fare provider is configured yet.'
+      message: 'Live fare provider credentials are not configured on the server yet.'
     });
   }
 
+  const method = (process.env.RIDECOMPARE_PROVIDER_METHOD || 'GET').toUpperCase();
+  const authHeader = process.env.RIDECOMPARE_PROVIDER_AUTH_HEADER || 'Authorization';
+  const authScheme = process.env.RIDECOMPARE_PROVIDER_AUTH_SCHEME ?? 'Bearer';
+  const authValue = authScheme ? `${authScheme} ${apiKey}` : apiKey;
+
   try {
     const url = new URL(upstream);
-    url.searchParams.set('from', from);
-    url.searchParams.set('to', to);
+    const headers = {
+      [authHeader]: authValue,
+      Accept: 'application/json'
+    };
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: 'application/json'
-      }
-    });
+    const payload = {
+      from,
+      to,
+      origin: from,
+      destination: to
+    };
 
+    const request = { method, headers };
+
+    if (method === 'GET') {
+      url.searchParams.set('from', from);
+      url.searchParams.set('to', to);
+    } else {
+      headers['Content-Type'] = 'application/json';
+      request.body = JSON.stringify(payload);
+    }
+
+    const response = await fetch(url, request);
     const text = await response.text();
+
     if (!response.ok) {
       return res.status(502).json({
         error: 'fare_provider_error',
@@ -55,7 +70,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json(data);
-  } catch (error) {
+  } catch {
     return res.status(502).json({ error: 'fare_provider_unreachable' });
   }
 }
