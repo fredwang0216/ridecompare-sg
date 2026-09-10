@@ -36,6 +36,6 @@ The UI expects normalized JSON such as:
 
 ## Deployment
 
-GitHub Pages can serve the frontend but cannot execute `api/quotes.js`. For live quotes, deploy this same repository to a serverless host such as Vercel and configure the two environment variables there. The frontend already defaults to `/api/quotes`, so no client-side API key is required.
+GitHub Pages can serve the frontend but cannot execute `api/quotes.js`. For live quotes, deploy this same repository to a serverless host such as Vercel and configure the two environment variables there. Vercel supports importing a GitHub repository and automatically deploying future pushes. The frontend already defaults to `/api/quotes`, so no client-side API key is required.
 
 Provider onboarding is deliberately separated from the UI. Official partner feeds should be preferred where available; a third-party live fare feed can be used only after its coverage, terms and accuracy are verified.
